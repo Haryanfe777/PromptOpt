@@ -2,9 +2,13 @@ from fastapi import APIRouter, HTTPException, status
 from app.models.chat import ChatRequest, ChatResponse
 from app.services.llm_service import LLMService
 from typing import List
+from app.services.evaluation_service import EvaluationService
+from app.utils.guardrails import analyze_guardrails
+from app.models.evaluation import GuardrailAnalysis
 
 router = APIRouter()
 llm_service = LLMService()
+evaluation_service = EvaluationService()
 
 # In-memory storage for conversation logs (MVP)
 conversation_logs: List[dict] = []
@@ -17,6 +21,24 @@ async def chat_with_hr_assistant(request: ChatRequest):
     try:
         # Generate response using LLM service
         response = await llm_service.generate_response(request)
+
+        # Guardrails analysis and potential redaction/warn
+        guardrails_report = analyze_guardrails(request.message, response.response)
+        guardrails = GuardrailAnalysis(**guardrails_report)
+        if guardrails.action == "redact" and guardrails.redacted_text:
+            response.response = guardrails.redacted_text
+
+        # Optional evaluation
+        if request.evaluate:
+            evaluation = await evaluation_service.evaluate(
+                user_message=request.message,
+                assistant_response=response.response,
+                prompt_used=response.prompt_used,
+            )
+            response.evaluation = evaluation
+
+        # Attach guardrails info
+        response.guardrails = guardrails
         
         # Log the conversation
         log_entry = {
@@ -25,7 +47,9 @@ async def chat_with_hr_assistant(request: ChatRequest):
             "assistant_response": response.response,
             "prompt_id": request.prompt_id,
             "response_time": response.response_time,
-            "conversation_id": response.conversation_id
+            "conversation_id": response.conversation_id,
+            "guardrails_action": guardrails.action,
+            "evaluation_overall": getattr(response.evaluation, "overall_score", None),
         }
         conversation_logs.append(log_entry)
         

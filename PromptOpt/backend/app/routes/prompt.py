@@ -1,11 +1,15 @@
 from fastapi import APIRouter, HTTPException, status, Depends
 from app.models.prompt import Prompt
 from typing import List
+from app.models.evaluation import EvaluationRequest, EvaluationResult
+from app.services.evaluation_service import EvaluationService
 
 router = APIRouter()
 
 # In-memory DB for MVP
 prompts_db: List[Prompt] = []
+
+eval_service = EvaluationService()
 
 @router.get("/prompts", response_model=List[Prompt])
 def list_prompts():
@@ -32,3 +36,15 @@ def delete_prompt(prompt_id: int):
             prompts_db.pop(idx)
             return {"ok": True}
     raise HTTPException(status_code=404, detail="Prompt not found")
+
+@router.post("/evaluate", response_model=EvaluationResult)
+async def evaluate_response(payload: EvaluationRequest):
+    try:
+        result = await eval_service.evaluate(
+            user_message=payload.user_message,
+            assistant_response=payload.assistant_response,
+            prompt_used=payload.prompt_used,
+        )
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Evaluation failed: {str(e)}")
