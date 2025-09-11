@@ -6,6 +6,7 @@ from app.services.evaluation_service import EvaluationService
 from app.utils.guardrails import analyze_guardrails
 from app.models.evaluation import GuardrailAnalysis
 from sqlalchemy.orm import Session
+from sqlalchemy import desc
 from app.db.database import get_db
 from app.db.models import Conversation, Message, Evaluation as ORMEval, Guardrail as ORMGuardrail, PromptVersion, User as ORMUser
 from app.auth.security import get_current_user, require_admin
@@ -96,10 +97,39 @@ async def chat_with_hr_assistant(request: ChatRequest, db: Session = Depends(get
         )
 
 @router.get("/chat/logs", dependencies=[Depends(require_admin)])
-def get_conversation_logs():
-    return {"logs": conversation_logs}
+def get_conversation_logs(db: Session = Depends(get_db)):
+    items = (
+        db.query(Conversation)
+        .order_by(desc(Conversation.started_at))
+        .limit(50)
+        .all()
+    )
+    out = []
+    for c in items:
+        out.append({
+            "id": c.id,
+            "user_id": c.user_id,
+            "prompt_version_id": c.prompt_version_id,
+            "started_at": c.started_at.isoformat(),
+            "message_count": len(c.messages),
+        })
+    return {"logs": out}
 
-@router.get("/chat/logs/{user_id}", dependencies=[Depends(require_admin)])
-def get_user_conversation_logs(user_id: str):
-    user_logs = [log for log in conversation_logs if log["user_id"] == user_id]
-    return {"logs": user_logs}
+@router.get("/chat/logs/user/{user_id}", dependencies=[Depends(require_admin)])
+def get_user_conversation_logs(user_id: int, db: Session = Depends(get_db)):
+    items = (
+        db.query(Conversation)
+        .filter(Conversation.user_id == user_id)
+        .order_by(desc(Conversation.started_at))
+        .all()
+    )
+    out = []
+    for c in items:
+        out.append({
+            "id": c.id,
+            "user_id": c.user_id,
+            "prompt_version_id": c.prompt_version_id,
+            "started_at": c.started_at.isoformat(),
+            "message_count": len(c.messages),
+        })
+    return {"logs": out}

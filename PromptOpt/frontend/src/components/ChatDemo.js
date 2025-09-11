@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
+import { useAuth } from '../context/AuthContext';
 
 export default function ChatDemo() {
+  const { token } = useAuth();
   const [message, setMessage] = useState('');
   const [evaluate, setEvaluate] = useState(true);
   const [response, setResponse] = useState(null);
@@ -14,10 +16,9 @@ export default function ChatDemo() {
     try {
       const res = await fetch('http://localhost:8000/chat', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
         body: JSON.stringify({
           message,
-          user_id: 'demo-user',
           prompt_id: null,
           conversation_history: [],
           evaluate,
