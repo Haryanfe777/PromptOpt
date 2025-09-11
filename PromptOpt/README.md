@@ -31,6 +31,30 @@ Example embedding (images will appear when added):
 
 ---
 
+## Quick scripts
+Use these helpers to launch and test quickly.
+
+Windows (PowerShell):
+```powershell
+# Start backend (with migrations + seed if needed) and frontend in new windows
+cd scripts
+./dev.ps1 -OpenAIKey "YOUR_OPENAI_KEY"
+
+# Smoke test the API (health, login, me, prompts, chat)
+./smoke.ps1 -Base "http://127.0.0.1:8000" -User admin -Pass admin
+```
+
+macOS/Linux:
+```bash
+# Start backend and frontend
+./scripts/dev.sh "$OPENAI_API_KEY"
+
+# Smoke test the API
+./scripts/smoke.sh http://127.0.0.1:8000 admin admin
+```
+
+---
+
 ## What’s in the box
 - `backend/` (FastAPI)
   - Auth (JWT), roles (admin/employee)
