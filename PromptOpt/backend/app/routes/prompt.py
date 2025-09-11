@@ -1,50 +1,69 @@
 from fastapi import APIRouter, HTTPException, status, Depends
-from app.models.prompt import Prompt
+from app.models.prompt import Prompt as PromptSchema
 from typing import List
 from app.models.evaluation import EvaluationRequest, EvaluationResult
 from app.services.evaluation_service import EvaluationService
+from sqlalchemy.orm import Session
+from app.db.database import get_db
+from app.db.models import Prompt as ORMPrompt, PromptVersion as ORMPromptVersion
+from app.auth.security import require_admin, get_current_user
 
 router = APIRouter()
 
-# In-memory DB for MVP
-prompts_db: List[Prompt] = []
-
 eval_service = EvaluationService()
 
-@router.get("/prompts", response_model=List[Prompt])
-def list_prompts():
-    return prompts_db
+@router.get("/prompts", response_model=List[PromptSchema])
+def list_prompts(db: Session = Depends(get_db)):
+	rows = db.query(ORMPrompt).all()
+	return [PromptSchema(id=r.id, title=r.title, content=(r.versions[0].content if r.versions else ""), created_by=r.created_by) for r in rows]
 
-@router.post("/prompts", response_model=Prompt)
-def create_prompt(prompt: Prompt):
-    prompt.id = len(prompts_db) + 1
-    prompts_db.append(prompt)
-    return prompt
+@router.post("/prompts", response_model=PromptSchema)
+def create_prompt(prompt: PromptSchema, db: Session = Depends(get_db), current_user=Depends(require_admin)):
+	p = ORMPrompt(title=prompt.title, created_by=current_user.username)
+	db.add(p)
+	db.flush()
+	v = ORMPromptVersion(prompt_id=p.id, version=1, content=prompt.content, is_active=True)
+	db.add(v)
+	db.commit()
+	db.refresh(p)
+	return PromptSchema(id=p.id, title=p.title, content=v.content, created_by=p.created_by)
 
-@router.put("/prompts/{prompt_id}", response_model=Prompt)
-def update_prompt(prompt_id: int, prompt: Prompt):
-    for idx, p in enumerate(prompts_db):
-        if p.id == prompt_id:
-            prompts_db[idx] = prompt
-            return prompt
-    raise HTTPException(status_code=404, detail="Prompt not found")
+@router.put("/prompts/{prompt_id}", response_model=PromptSchema)
+def update_prompt(prompt_id: int, prompt: PromptSchema, db: Session = Depends(get_db), current_user=Depends(require_admin)):
+	p = db.query(ORMPrompt).filter(ORMPrompt.id == prompt_id).first()
+	if not p:
+		raise HTTPException(status_code=404, detail="Prompt not found")
+	# create new version
+	latest_version = (db.query(ORMPromptVersion)
+		.filter(ORMPromptVersion.prompt_id == prompt_id)
+		.order_by(ORMPromptVersion.version.desc())
+		.first())
+	next_version = (latest_version.version + 1) if latest_version else 1
+	v = ORMPromptVersion(prompt_id=prompt_id, version=next_version, content=prompt.content, is_active=True)
+	# deactivate previous
+	if latest_version:
+		latest_version.is_active = False
+	db.add(v)
+	db.commit()
+	return PromptSchema(id=p.id, title=p.title, content=v.content, created_by=p.created_by)
 
 @router.delete("/prompts/{prompt_id}")
-def delete_prompt(prompt_id: int):
-    for idx, p in enumerate(prompts_db):
-        if p.id == prompt_id:
-            prompts_db.pop(idx)
-            return {"ok": True}
-    raise HTTPException(status_code=404, detail="Prompt not found")
+def delete_prompt(prompt_id: int, db: Session = Depends(get_db), current_user=Depends(require_admin)):
+	p = db.query(ORMPrompt).filter(ORMPrompt.id == prompt_id).first()
+	if not p:
+		raise HTTPException(status_code=404, detail="Prompt not found")
+	db.delete(p)
+	db.commit()
+	return {"ok": True}
 
 @router.post("/evaluate", response_model=EvaluationResult)
 async def evaluate_response(payload: EvaluationRequest):
-    try:
-        result = await eval_service.evaluate(
-            user_message=payload.user_message,
-            assistant_response=payload.assistant_response,
-            prompt_used=payload.prompt_used,
-        )
-        return result
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Evaluation failed: {str(e)}")
+	try:
+		result = await eval_service.evaluate(
+			user_message=payload.user_message,
+			assistant_response=payload.assistant_response,
+			prompt_used=payload.prompt_used,
+		)
+		return result
+	except Exception as e:
+		raise HTTPException(status_code=500, detail=f"Evaluation failed: {str(e)}")
