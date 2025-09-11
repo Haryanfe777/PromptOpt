@@ -4,6 +4,7 @@ from app.services.llm_service import LLMService
 from typing import List
 from app.services.evaluation_service import EvaluationService
 from app.utils.guardrails import analyze_guardrails
+from app.utils.moderation import ModerationService
 from app.models.evaluation import GuardrailAnalysis
 from sqlalchemy.orm import Session
 from sqlalchemy import desc
@@ -14,6 +15,7 @@ from app.auth.security import get_current_user, require_admin
 router = APIRouter()
 llm_service = LLMService()
 evaluation_service = EvaluationService()
+moderation = ModerationService()
 
 @router.post("/chat", response_model=ChatResponse)
 async def chat_with_hr_assistant(request: ChatRequest, db: Session = Depends(get_db), current_user: ORMUser = Depends(get_current_user)):
@@ -21,6 +23,13 @@ async def chat_with_hr_assistant(request: ChatRequest, db: Session = Depends(get
     Chat with the HR assistant using LLM
     """
     try:
+        # Pre-check moderation on user input
+        action, replacement = moderation.check(request.message)
+        if action == 'block':
+            raise HTTPException(status_code=400, detail="Message blocked by moderation policy")
+        if action == 'redact' and replacement:
+            request.message = replacement
+
         # Generate response using LLM service
         response = await llm_service.generate_response(request)
 
@@ -73,6 +82,8 @@ async def chat_with_hr_assistant(request: ChatRequest, db: Session = Depends(get
         db.commit()
         return response
         
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

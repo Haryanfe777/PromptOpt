@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { API_BASE } from '../config';
+import Toast from './Toast';
 
 export default function ChatDemo() {
   const { token } = useAuth();
@@ -9,10 +10,12 @@ export default function ChatDemo() {
   const [response, setResponse] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [note, setNote] = useState('');
 
   const send = async () => {
     setLoading(true);
     setError('');
+    setNote('');
     setResponse(null);
     try {
       const res = await fetch(`${API_BASE}/chat`, {
@@ -30,6 +33,7 @@ export default function ChatDemo() {
       }
       const data = await res.json();
       setResponse(data);
+      setNote('Message sent successfully.');
     } catch (e) {
       setError(String(e.message || e));
     } finally {
@@ -59,6 +63,9 @@ export default function ChatDemo() {
 
       {error && (
         <div style={{ color: 'red', marginTop: 12 }}>Error: {error}</div>
+      )}
+      {note && (
+        <div style={{ marginTop: 12 }}><Toast kind="success" message={note} /></div>
       )}
 
       {response && (

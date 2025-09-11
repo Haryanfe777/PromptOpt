@@ -16,9 +16,14 @@ export default function Home() {
         <Login />
       ) : (
         <div>
-          <div style={{ marginBottom: 8 }}>
-            Signed in as <strong>{user?.username}</strong>
-            <button style={{ marginLeft: 8 }} onClick={logout}>Sign out</button>
+          <div style={{ marginBottom: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span>
+              Signed in as <strong>{user?.username}</strong>
+            </span>
+            <span style={{ padding: '2px 6px', border: '1px solid #ddd', borderRadius: 6, background: isAdmin ? '#fff3cd' : '#e7f5ff' }}>
+              {isAdmin ? 'Admin' : 'Employee'}
+            </span>
+            <button style={{ marginLeft: 'auto' }} onClick={logout}>Sign out</button>
           </div>
           <ChatDemo />
           {isAdmin && (
