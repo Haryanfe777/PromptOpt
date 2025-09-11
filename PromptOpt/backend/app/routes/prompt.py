@@ -36,6 +36,18 @@ def create_prompt(prompt: PromptSchema, db: Session = Depends(get_db), current_u
 	db.refresh(p)
 	return PromptSchema(id=p.id, title=p.title, content=v.content, created_by=p.created_by)
 
+@router.patch("/prompts/{prompt_id}/title")
+def rename_prompt(prompt_id: int, payload: dict, db: Session = Depends(get_db), current_user=Depends(require_admin)):
+	p = db.query(ORMPrompt).filter(ORMPrompt.id == prompt_id).first()
+	if not p:
+		raise HTTPException(status_code=404, detail="Prompt not found")
+	title = payload.get("title")
+	if not title:
+		raise HTTPException(status_code=400, detail="title is required")
+	p.title = title
+	db.commit()
+	return {"ok": True}
+
 @router.put("/prompts/{prompt_id}", response_model=PromptSchema)
 def update_prompt(prompt_id: int, prompt: PromptSchema, db: Session = Depends(get_db), current_user=Depends(require_admin)):
 	p = db.query(ORMPrompt).filter(ORMPrompt.id == prompt_id).first()
