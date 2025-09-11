@@ -15,9 +15,6 @@ router = APIRouter()
 llm_service = LLMService()
 evaluation_service = EvaluationService()
 
-# In-memory storage (deprecated; will remove after DB fully wired)
-conversation_logs: List[dict] = []
-
 @router.post("/chat", response_model=ChatResponse)
 async def chat_with_hr_assistant(request: ChatRequest, db: Session = Depends(get_db), current_user: ORMUser = Depends(get_current_user)):
     """
@@ -35,7 +32,6 @@ async def chat_with_hr_assistant(request: ChatRequest, db: Session = Depends(get
 
         # Persist conversation and messages
         conv = Conversation(user_id=current_user.id)
-        # Attach prompt version if selected
         if request.prompt_id:
             pv = db.query(PromptVersion).filter(PromptVersion.prompt_id == request.prompt_id, PromptVersion.is_active == True).order_by(PromptVersion.version.desc()).first()
             if pv:
@@ -75,19 +71,6 @@ async def chat_with_hr_assistant(request: ChatRequest, db: Session = Depends(get
         ))
 
         db.commit()
-
-        # Legacy in-memory log
-        conversation_logs.append({
-            "user_id": current_user.id,
-            "user_message": request.message,
-            "assistant_response": response.response,
-            "prompt_id": request.prompt_id,
-            "response_time": response.response_time,
-            "conversation_id": response.conversation_id,
-            "guardrails_action": guardrails.action,
-            "evaluation_overall": getattr(response.evaluation, "overall_score", None),
-        })
-        
         return response
         
     except Exception as e:

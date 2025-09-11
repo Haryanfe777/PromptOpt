@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { API_BASE } from '../config';
 
 const AuthContext = createContext(null);
 
@@ -19,19 +20,42 @@ export function AuthProvider({ children }) {
     else localStorage.removeItem('authUser');
   }, [user]);
 
+  useEffect(() => {
+    const fetchMe = async () => {
+      try {
+        const res = await fetch(`${API_BASE}/me`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) throw new Error('not auth');
+        const data = await res.json();
+        setUser({ username: data.username, role: data.role, id: data.id });
+      } catch {
+        setUser(null);
+        setToken('');
+      }
+    };
+    if (token && !user) fetchMe();
+  }, [token]);
+
   const login = async (username, password) => {
     const body = new URLSearchParams();
     body.append('username', username);
     body.append('password', password);
-    const res = await fetch('http://127.0.0.1:8000/login', {
+    const res = await fetch(`${API_BASE}/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body,
     });
     if (!res.ok) throw new Error(`Login failed: ${res.status}`);
     const data = await res.json();
-    setToken(data.access_token || '');
-    setUser({ username });
+    const newToken = data.access_token || '';
+    setToken(newToken);
+    // fetch profile
+    const meRes = await fetch(`${API_BASE}/me`, { headers: { Authorization: `Bearer ${newToken}` } });
+    if (meRes.ok) {
+      const me = await meRes.json();
+      setUser({ username: me.username, role: me.role, id: me.id });
+    }
     return true;
   };
 

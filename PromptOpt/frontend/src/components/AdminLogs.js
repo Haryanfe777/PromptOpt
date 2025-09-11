@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { API_BASE } from '../config';
 
 export default function AdminLogs() {
-  const { token } = useAuth();
+  const { token, user } = useAuth();
   const [logs, setLogs] = useState([]);
   const [error, setError] = useState('');
 
@@ -10,7 +11,7 @@ export default function AdminLogs() {
     const run = async () => {
       setError('');
       try {
-        const res = await fetch('http://localhost:8000/chat/logs', {
+        const res = await fetch(`${API_BASE}/chat/logs`, {
           headers: token ? { Authorization: `Bearer ${token}` } : {},
         });
         if (!res.ok) throw new Error(`Failed: ${res.status}`);
@@ -20,10 +21,10 @@ export default function AdminLogs() {
         setError(String(e.message || e));
       }
     };
-    if (token) run();
-  }, [token]);
+    if (token && user?.role === 'admin') run();
+  }, [token, user]);
 
-  if (!token) return null;
+  if (!token || user?.role !== 'admin') return null;
 
   return (
     <div style={{ border: '1px solid #ddd', padding: 16, borderRadius: 8 }}>

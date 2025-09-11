@@ -4,7 +4,7 @@ from app.models.user import Token
 from sqlalchemy.orm import Session
 from app.db.database import get_db
 from app.db.models import User as ORMUser
-from app.auth.security import verify_password, create_access_token
+from app.auth.security import verify_password, create_access_token, get_current_user
 
 router = APIRouter()
 
@@ -23,3 +23,8 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
 		raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
 	token = create_access_token(subject=user.username, role=user.role)
 	return {"access_token": token, "token_type": "bearer"}
+
+
+@router.get("/me")
+def me(current: ORMUser = Depends(get_current_user)):
+	return {"id": current.id, "username": current.username, "role": current.role}
