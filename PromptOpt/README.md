@@ -10,6 +10,27 @@ The goal: demonstrate real “LLM Ops” capabilities (prompt lifecycle, safety,
 
 ---
 
+## Screenshots
+>  `docs/screenshots/`
+
+- Login
+  - `docs/screenshots/login.png`
+- Chat Demo with evaluation & guardrails
+  - `docs/screenshots/chat_demo.png`
+- Prompt Manager (versions / activation)
+  - `docs/screenshots/prompt_manager.png`
+- Admin Logs
+  - `docs/screenshots/admin_logs.png`
+
+Example embedding (images will appear when added):
+
+![Login](docs/screenshots/login.png)
+![Chat Demo](docs/screenshots/chat_demo.png)
+![Prompt Manager](docs/screenshots/prompt_manager.png)
+![Admin Logs](docs/screenshots/admin_logs.png)
+
+---
+
 ## What’s in the box
 - `backend/` (FastAPI)
   - Auth (JWT), roles (admin/employee)
