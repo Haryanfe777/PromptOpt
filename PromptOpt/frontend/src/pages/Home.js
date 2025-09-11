@@ -4,9 +4,11 @@ import ChatDemo from '../components/ChatDemo';
 import Login from '../components/Login';
 import { useAuth } from '../context/AuthContext';
 import AdminLogs from '../components/AdminLogs';
+import PromptManager from '../components/PromptManager';
 
 export default function Home() {
   const { token, user, logout } = useAuth();
+  const isAdmin = user?.role === 'admin';
   return (
     <div style={{ display: 'grid', gap: 16 }}>
       <Placeholder text="Welcome to the Prompt Optimization Toolkit!" />
@@ -19,9 +21,14 @@ export default function Home() {
             <button style={{ marginLeft: 8 }} onClick={logout}>Sign out</button>
           </div>
           <ChatDemo />
-          <div style={{ marginTop: 16 }}>
-            <AdminLogs />
-          </div>
+          {isAdmin && (
+            <div style={{ marginTop: 16 }}>
+              <PromptManager />
+              <div style={{ marginTop: 16 }}>
+                <AdminLogs />
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>
