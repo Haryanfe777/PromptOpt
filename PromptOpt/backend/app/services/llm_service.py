@@ -31,7 +31,6 @@ class LLMService:
         """Get prompt content by ID or return default"""
         if prompt_id:
             # TODO: Fetch from database when implemented
-            # For now, return default general prompt
             return self.default_prompts["general"]
         return self.default_prompts["general"]
     
@@ -45,13 +44,13 @@ class LLMService:
             })
         return messages
     
-    async def generate_response(self, request: ChatRequest) -> ChatResponse:
+    async def generate_response(self, request: ChatRequest, system_prompt_override: Optional[str] = None) -> ChatResponse:
         """Generate response using OpenAI API"""
         start_time = time.time()
         
         try:
-            # Get the prompt to use
-            system_prompt = self.get_prompt_content(request.prompt_id)
+            # Choose system prompt (DB override wins)
+            system_prompt = system_prompt_override or self.get_prompt_content(request.prompt_id)
             
             # Prepare messages for OpenAI
             messages = [
@@ -84,7 +83,7 @@ class LLMService:
                 response=ai_response,
                 prompt_used=system_prompt,
                 response_time=response_time,
-                conversation_id=f"conv_{request.user_id}_{int(time.time())}"
+                conversation_id=f"conv_{int(time.time())}"
             )
             
         except Exception as e:

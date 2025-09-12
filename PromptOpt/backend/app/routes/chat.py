@@ -11,11 +11,13 @@ from sqlalchemy import desc
 from app.db.database import get_db
 from app.db.models import Conversation, Message, Evaluation as ORMEval, Guardrail as ORMGuardrail, PromptVersion, User as ORMUser
 from app.auth.security import get_current_user, require_admin
+from app.services.rag_service import RAGService
 
 router = APIRouter()
 llm_service = LLMService()
 evaluation_service = EvaluationService()
 moderation = ModerationService()
+rag_service = RAGService()
 
 @router.post("/chat", response_model=ChatResponse)
 async def chat_with_hr_assistant(request: ChatRequest, db: Session = Depends(get_db), current_user: ORMUser = Depends(get_current_user)):
@@ -30,8 +32,26 @@ async def chat_with_hr_assistant(request: ChatRequest, db: Session = Depends(get
         if action == 'redact' and replacement:
             request.message = replacement
 
-        # Generate response using LLM service
-        response = await llm_service.generate_response(request)
+        # Resolve system prompt from DB if prompt_id specified
+        system_prompt_override = None
+        active_pv = None
+        if request.prompt_id:
+            active_pv = (
+                db.query(PromptVersion)
+                .filter(PromptVersion.prompt_id == request.prompt_id, PromptVersion.is_active == True)
+                .order_by(PromptVersion.version.desc())
+                .first()
+            )
+            if active_pv:
+                system_prompt_override = active_pv.content
+
+        # RAG: add company context to the system prompt if requested
+        if request.use_company_context:
+            base = system_prompt_override or llm_service.get_prompt_content(request.prompt_id)
+            system_prompt_override = rag_service.build_system_prompt(base_prompt=base, query=request.message, top_k=4)
+
+        # Generate response using LLM service (DB prompt wins)
+        response = await llm_service.generate_response(request, system_prompt_override=system_prompt_override)
 
         # Guardrails analysis and potential redaction/warn
         guardrails_report = analyze_guardrails(request.message, response.response)
@@ -41,10 +61,8 @@ async def chat_with_hr_assistant(request: ChatRequest, db: Session = Depends(get
 
         # Persist conversation and messages
         conv = Conversation(user_id=current_user.id)
-        if request.prompt_id:
-            pv = db.query(PromptVersion).filter(PromptVersion.prompt_id == request.prompt_id, PromptVersion.is_active == True).order_by(PromptVersion.version.desc()).first()
-            if pv:
-                conv.prompt_version_id = pv.id
+        if active_pv:
+            conv.prompt_version_id = active_pv.id
         db.add(conv)
         db.flush()
 

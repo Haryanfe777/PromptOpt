@@ -15,6 +15,7 @@ class ChatRequest(BaseModel):
 	prompt_id: Optional[int] = None  # Which prompt template to use
 	conversation_history: Optional[List[ChatMessage]] = []
 	evaluate: Optional[bool] = False
+	use_company_context: Optional[bool] = False
 
 
 class ChatResponse(BaseModel):
