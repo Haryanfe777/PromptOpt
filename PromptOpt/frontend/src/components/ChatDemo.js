@@ -7,7 +7,6 @@ export default function ChatDemo() {
   const { token } = useAuth();
   const [message, setMessage] = useState('');
   const [evaluate, setEvaluate] = useState(true);
-  const [useCompany, setUseCompany] = useState(false);
   const [response, setResponse] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -27,7 +26,6 @@ export default function ChatDemo() {
           prompt_id: null,
           conversation_history: [],
           evaluate,
-          use_company_context: useCompany,
         }),
       });
       if (!res.ok) {
@@ -59,10 +57,6 @@ export default function ChatDemo() {
         <input type="checkbox" checked={evaluate} onChange={(e) => setEvaluate(e.target.checked)} />
         {' '}Evaluate response
       </label>
-      <label style={{ display: 'block', marginBottom: 8 }}>
-        <input type="checkbox" checked={useCompany} onChange={(e) => setUseCompany(e.target.checked)} />
-        {' '}Use company context (RAG)
-      </label>
       <button onClick={send} disabled={loading || !message.trim()}>
         {loading ? 'Sending...' : 'Send'}
       </button>
@@ -80,6 +74,17 @@ export default function ChatDemo() {
             <strong>Assistant:</strong>
             <div style={{ whiteSpace: 'pre-wrap' }}>{response.response}</div>
           </div>
+
+          {response.provenance && (
+            <div style={{ marginBottom: 8 }}>
+              <strong>Provenance:</strong>
+              <ul>
+                {response.provenance.map((p, i) => (
+                  <li key={i}><em>{p.source || 'doc'}</em>: {p.text}</li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           {response.guardrails && (
             <div style={{ marginBottom: 8 }}>

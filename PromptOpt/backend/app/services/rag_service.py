@@ -1,6 +1,6 @@
 import os
 import json
-from typing import List, Tuple
+from typing import List, Tuple, Dict
 import numpy as np
 import faiss
 from pypdf import PdfReader
@@ -55,7 +55,6 @@ class RAGService:
 		vecs = self._embed(chunks)
 		if self.index is None:
 			self.index = faiss.IndexFlatIP(vecs.shape[1])
-		# Normalize for cosine similarity via inner product
 		faiss.normalize_L2(vecs)
 		self.index.add(vecs)
 		for i, chunk in enumerate(chunks):
@@ -80,13 +79,15 @@ class RAGService:
 			out.append((m["text"], float(d), m))
 		return out
 
-	def build_system_prompt(self, base_prompt: str, query: str, top_k: int = 4) -> str:
+	def build_system_prompt_with_provenance(self, base_prompt: str, query: str, top_k: int = 4) -> Tuple[str, List[Dict]]:
 		contexts = self.retrieve(query, top_k=top_k)
+		if not contexts:
+			return base_prompt, []
 		ctx_block = "\n\n".join([f"[Source {i+1}]\n" + t for i, (t, _, _) in enumerate(contexts)])
-		if not ctx_block:
-			return base_prompt
-		return (
+		prov = [{"text": t, "score": s, "source": m.get("source")} for (t, s, m) in contexts]
+		prompt = (
 			f"{base_prompt}\n\n"
 			f"Use ONLY the following company context to answer. If the answer is not in the context, say you cannot find it.\n"
 			f"Context:\n{ctx_block}"
 		)
+		return prompt, prov

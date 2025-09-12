@@ -6,7 +6,7 @@ function App() {
   return (
     <AuthProvider>
       <div>
-        <h1>Prompt Optimization Toolkit</h1>
+        <h1>Habeeb Prompt Optimization Toolkit</h1>
         <Home />
       </div>
     </AuthProvider>

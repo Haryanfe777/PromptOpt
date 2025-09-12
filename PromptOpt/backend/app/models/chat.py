@@ -18,6 +18,12 @@ class ChatRequest(BaseModel):
 	use_company_context: Optional[bool] = False
 
 
+class ProvenanceItem(BaseModel):
+	text: str
+	score: Optional[float] = None
+	source: Optional[str] = None
+
+
 class ChatResponse(BaseModel):
 	response: str
 	prompt_used: Optional[str] = None
@@ -25,3 +31,5 @@ class ChatResponse(BaseModel):
 	conversation_id: Optional[str] = None
 	evaluation: Optional[EvaluationResult] = None
 	guardrails: Optional[GuardrailAnalysis] = None
+	provenance: Optional[List[ProvenanceItem]] = None
+	timestamp: Optional[datetime] = None
