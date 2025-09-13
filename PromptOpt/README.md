@@ -7,6 +7,8 @@ A practical prototype showing how to build an internal HR knowledge assistant wi
 - Retrieval-Augmented Generation (RAG) with provenance
 - Persistence, authentication (JWT), and admin UI
 
+Read the full story: [docs/blog.md](docs/blog.md)
+
 The goal: demonstrate real “LLM Ops” capabilities (prompt lifecycle, safety, evaluation, retrieval) in a clean, runnable stack.
 
 ---
