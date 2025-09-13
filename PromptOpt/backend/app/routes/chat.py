@@ -7,7 +7,7 @@ from app.utils.guardrails import analyze_guardrails
 from app.utils.moderation import ModerationService
 from app.models.evaluation import GuardrailAnalysis
 from sqlalchemy.orm import Session
-from sqlalchemy import desc
+from sqlalchemy import desc, asc
 from app.db.database import get_db
 from app.db.models import Conversation, Message, Evaluation as ORMEval, Guardrail as ORMGuardrail, PromptVersion, User as ORMUser, Prompt as ORMPrompt
 from app.auth.security import get_current_user, require_admin
@@ -141,8 +141,22 @@ async def chat_with_hr_assistant(request: ChatRequest, db: Session = Depends(get
         ))
 
         db.commit()
+
+        # prune old conversations to keep only the latest 10
+        count = db.query(Conversation).count()
+        if count > 10:
+            # delete the oldest ones beyond 10
+            to_delete = (
+                db.query(Conversation)
+                .order_by(asc(Conversation.started_at))
+                .limit(count - 10)
+                .all()
+            )
+            for c in to_delete:
+                db.delete(c)
+            db.commit()
+
         return response
-        
     except HTTPException:
         raise
     except Exception as e:

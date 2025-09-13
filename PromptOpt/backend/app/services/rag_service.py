@@ -32,6 +32,10 @@ class RAGService:
 			for m in self.meta:
 				f.write(json.dumps(m, ensure_ascii=False) + "\n")
 
+	def _ensure_loaded(self):
+		if (self.index is None or not self.meta) and os.path.exists(INDEX_PATH) and os.path.exists(META_PATH):
+			self._load()
+
 	def _embed(self, texts: List[str]) -> np.ndarray:
 		res = self.client.embeddings.create(model=EMBED_MODEL, input=texts)
 		vecs = [np.array(e.embedding, dtype=np.float32) for e in res.data]
@@ -63,9 +67,11 @@ class RAGService:
 		return len(chunks)
 
 	def status(self) -> dict:
+		self._ensure_loaded()
 		return {"documents": len(self.meta), "has_index": self.index is not None}
 
 	def retrieve(self, query: str, top_k: int = 4) -> List[Tuple[str, float, dict]]:
+		self._ensure_loaded()
 		if self.index is None or not self.meta:
 			return []
 		q = self._embed([query])
