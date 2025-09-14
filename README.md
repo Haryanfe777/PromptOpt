@@ -16,13 +16,13 @@ The goal: I wanted to demonstrate my real LLM Ops capabilities including prompt 
 ## Screenshots
 
 - Login
-  - ![Login](docs/screenshots/login.png)
+  - ![Login](PromptOpt/docs/screenshots/login.png)
 - Chat Demo with evaluation & guardrails
-  - ![Chat Demo](docs/screenshots/chat_demo.png)
+  - ![Chat Demo](PromptOpt/docs/screenshots/chat_demo.png)
 - Prompt Manager (versions / activation)
-  - ![Prompt Manager](docs/screenshots/prompt_manager.png)
+  - ![Prompt Manager](PromptOpt/docs/screenshots/prompt_manager.png)
 - Admin Logs
-  - ![Admin Logs](docs/screenshots/admin_logs.png)
+  - ![Admin Logs](PromptOpt/docs/screenshots/admin_logs.png)
 
 
 ---
