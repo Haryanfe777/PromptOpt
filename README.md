@@ -1,6 +1,6 @@
 # Habeeb Prompt Optimization Toolkit for HR Assistants
 
-A practical prototype showing how to build an internal HR knowledge assistant with:
+A practical prototype showing how I built an internal HR knowledge assistant with:
 - Optimized prompt management with versioning and activation
 - Guardrails (PII/profanity heuristics + optional OpenAI Moderation)
 - Automated response evaluation (LLM judge + heuristics)
@@ -9,7 +9,7 @@ A practical prototype showing how to build an internal HR knowledge assistant wi
 
 Read the full story: [docs/blog.md](PromptOpt/docs/blog.md)
 
-The goal: demonstrate real “LLM Ops” capabilities (prompt lifecycle, safety, evaluation, retrieval) in a clean, runnable stack.
+The goal: I wanted to demonstrate my real LLM Ops capabilities including prompt lifecycle, safety, evaluation, retrieval in a clean, runnable stack.
 
 ---
 
@@ -39,7 +39,7 @@ Use these helpers to launch and test quickly.
 
 Windows (PowerShell):
 ```powershell
-# Start backend (with migrations + seed if needed) and frontend in new windows
+# Start backend with migrations + seed if needed and frontend in new windows
 cd scripts
 ./dev.ps1 -OpenAIKey "YOUR_OPENAI_KEY"
 
@@ -155,12 +155,12 @@ How to ingest via API docs:
 3) GET `/rag/status` to confirm `has_index` true and documents > 0
 
 How chat uses RAG:
-- No UI toggle required. If RAG index has documents, backend automatically retrieves top matches and appends them to the system prompt before calling the LLM.
+- If RAG index has documents, backend automatically retrieves top matches and appends them to the system prompt before calling the LLM.
 - The `provenance` array in the response shows short text snippets and sources used.
 
 ---
 
-## How to demo (5 minutes)
+## How to demo
 1) Login
    - Use `admin/admin` (seeded). Role badge shows “Admin”.
 2) Chat Demo
@@ -238,5 +238,6 @@ How chat uses RAG:
 
 ---
 
+
 ## License
-MIT (for learning/demo purposes).
+MIT (for learning/demo purposes). Use it however you want but give credit. 
