@@ -14,23 +14,16 @@ The goal: I wanted to demonstrate my real LLM Ops capabilities including prompt 
 ---
 
 ## Screenshots
->  `docs/screenshots/`
 
 - Login
-  - `docs/screenshots/login.png`
+  - ![Login](docs/screenshots/login.png)
 - Chat Demo with evaluation & guardrails
-  - `docs/screenshots/chat_demo.png`
+  - ![Chat Demo](docs/screenshots/chat_demo.png)
 - Prompt Manager (versions / activation)
-  - `docs/screenshots/prompt_manager.png`
+  - ![Prompt Manager](docs/screenshots/prompt_manager.png)
 - Admin Logs
-  - `docs/screenshots/admin_logs.png`
+  - ![Admin Logs](docs/screenshots/admin_logs.png)
 
-Example embedding (images will appear when added):
-
-![Login](docs/screenshots/login.png)
-![Chat Demo](docs/screenshots/chat_demo.png)
-![Prompt Manager](docs/screenshots/prompt_manager.png)
-![Admin Logs](docs/screenshots/admin_logs.png)
 
 ---
 
