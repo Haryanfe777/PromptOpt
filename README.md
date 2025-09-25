@@ -7,7 +7,12 @@ A practical prototype showing how I built an internal HR knowledge assistant wit
 - Retrieval-Augmented Generation (RAG) with provenance
 - Persistence, authentication (JWT), and admin UI
 
-Read the full story: [docs/blog.md](PromptOpt/docs/blog.md)
+## Learn More
+
+Read the full story here:  
+- [docs/blog.md](PromptOpt/docs/blog.md)  
+- Or on Medium: [Building a Practical HR Knowledge Assistant Using RAG](https://medium.com/@hammedhabeeb13137954/building-a-practical-hr-knowledge-assistant-using-rag-from-idea-to-running-prototype-c74991cf82a4)
+
 
 The goal: I wanted to demonstrate my real LLM Ops capabilities including prompt lifecycle, safety, evaluation, retrieval in a clean, runnable stack.
 
